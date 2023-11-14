@@ -8,11 +8,11 @@ from bs4 import BeautifulSoup
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.common.exceptions import WebDriverException
+from selenium.common.exceptions import WebDriverException, NoSuchElementException
 
 class CemantixSession(Thread):
     timezone = pytz.timezone('Europe/Paris')
-    game_name = 'cémantix'
+    game_name = 'cemantix'
     game_url = "https://cemantix.certitudes.org/"
     delay = 0.1
 
@@ -75,6 +75,13 @@ class CemantixSession(Thread):
         self.driver = driver = webdriver.Firefox()
 
         driver.get(self.game_url)
+        
+        time.sleep(self.delay)
+        try:
+            if btn := driver.find_element(By.CSS_SELECTOR, ".fc-button.fc-cta-do-not-consent.fc-secondary-button"):
+                btn.click()
+        except NoSuchElementException:
+            pass
 
         time.sleep(self.delay)
         driver.find_element(By.ID, 'dialog-close').click()
@@ -104,7 +111,8 @@ class CemantixSession(Thread):
         return self
 
     def run(self):
-        prev_state = self.driver.find_element_by_id('cemantix-guessable').get_attribute('outerHTML')
+        time.sleep(100)
+        prev_state = self.driver.find_element_by_id(f'{self.game_name}-guessable').get_attribute('outerHTML')
 
         while not self.game_is_over:
             # make the thread sleep 10s
@@ -119,20 +127,20 @@ class CemantixSession(Thread):
             
             # click on reveal solution if solution was found
             try:
-                if btn := self.driver.find_element(By.ID, 'cemantix-reveal'):
+                if btn := self.driver.find_element(By.ID, f'{self.game_name}-reveal'):
                     btn.click()
                     time.sleep(self.delay)
-                if btn := self.driver.find_element(By.ID, 'cemantix-guess-btn'):
+                if btn := self.driver.find_element(By.ID, f'{self.game_name}-guess-btn'):
                     btn.click()
                     time.sleep(self.delay)
             except WebDriverException:
                 pass
             
             # extract current guesses
-            cur_state = self.driver.find_element_by_id('cemantix-guessable').get_attribute('outerHTML')
+            cur_state = self.driver.find_element_by_id(f'{self.game_name}-guessable').get_attribute('outerHTML')
             if cur_state != prev_state:
                 soup = BeautifulSoup(cur_state, 'html.parser')
-                guesses = self._extract_guesses(soup)
+                guesses = self._extract_guesses(soup, self.game_name)
                 self.guesses = guesses
                 prev_state = cur_state
 
@@ -160,8 +168,8 @@ class CemantixSession(Thread):
         return (word, temperature, emoji, percent)
     
     @classmethod
-    def _extract_guesses(cls, soup):
-        table = soup.find('table', {'id': 'cemantix-guessable'})
+    def _extract_guesses(cls, soup, game_name):
+        table = soup.find('table', {'id': f'{game_name}-guessable'})
 
         top_guess_soup = table.thead.find('tr', {'class': 'guesses'})
 
@@ -172,6 +180,13 @@ class CemantixSession(Thread):
         guesses = sorted(set(filter(bool, guesses)), key=lambda x: x[-1], reverse=True)
         return guesses
 
+
+class CemantleSession(CemantixSession):
+    timezone = pytz.timezone('America/Los_Angeles')
+    game_name = 'cemantle'
+    game_url = "https://cemantle.certitudes.org/"
+
+
 if __name__ == '__main__':
-    session = CemantixSession()
+    session = CemantleSession()
     session.start()

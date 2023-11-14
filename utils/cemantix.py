@@ -14,7 +14,7 @@ class CemantixSession(Thread):
     timezone = pytz.timezone('Europe/Paris')
     game_name = 'cemantix'
     game_url = "https://cemantix.certitudes.org/"
-    delay = 0.1
+    delay = 0.2
 
     def __init__(self):
         super().__init__()
@@ -111,7 +111,6 @@ class CemantixSession(Thread):
         return self
 
     def run(self):
-        time.sleep(100)
         prev_state = self.driver.find_element_by_id(f'{self.game_name}-guessable').get_attribute('outerHTML')
 
         while not self.game_is_over:
@@ -131,6 +130,14 @@ class CemantixSession(Thread):
                     btn.click()
                     time.sleep(self.delay)
                 if btn := self.driver.find_element(By.ID, f'{self.game_name}-guess-btn'):
+                    btn.click()
+                    time.sleep(self.delay)
+            except WebDriverException:
+                pass
+                
+            # show all close words is solution was found
+            try:
+                if btn := self.driver.find_element(By.ID, f'{self.game_name}-see'):
                     btn.click()
                     time.sleep(self.delay)
             except WebDriverException:

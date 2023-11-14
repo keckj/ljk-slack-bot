@@ -23,9 +23,13 @@ def cemantix_callback(command, ack: Ack, respond: Respond, say: Say, logger: Log
                 elif session.guesses:
                     guesses = list(filter(lambda guess: guess[-1] <= permile, session.guesses))
                     if guesses:
-                        response = ""
-                        for guess in guesses[:min(len(guesses), 10)]:
-                            response += "\n" + " ".join(map(str, guess))
+                        guesses = list(tuple(map(str, g)) for g in guesses[:min(len(guesses), 10)])
+                        guesses = [('Mot', '°C', '🌡️', '‰')] + guesses
+                        fmt = ''
+                        for i in range(len(guesses[0])):
+                            ml = max(len(g[i]) for g in guesses)
+                            fmt += '  {:' + f'<{ml}s' + '}'
+                        response = '```' + '\n'.join(fmt.format(*g) for g in guesses) + '```'
                         respond(response)
                     else:
                         respond(f"Cannot get hints, no solutions under {permile}‰ have been found yet.")
@@ -39,7 +43,8 @@ def cemantix_callback(command, ack: Ack, respond: Respond, say: Say, logger: Log
                 session = CemantixSession()
                 session.start()
                 cemantix_callback.session = session
-                say(channel='games', text=f"<@{command['user_name']}> started {cemantix_url} with token {session.token}.")
+                say(text=f"<@{command['user_name']}> started {cemantix_url} with token {session.token}.",
+                    channel='games', unfurl_links=False, unfurl_media=False)
             elif session.solution_found:
                 respond(f"Today's solution was already found, use /cemantix_url [0-1000] to get hints about the solution.")
             elif session.has_guesses:

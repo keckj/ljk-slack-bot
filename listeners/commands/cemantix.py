@@ -24,7 +24,7 @@ def cemantix_callback(command, ack: Ack, respond: Respond, say: Say, logger: Log
                     guesses = list(filter(lambda guess: guess[-1] <= permile, session.guesses))
                     if guesses:
                         guesses = list(tuple(map(str, g)) for g in guesses[:min(len(guesses), 10)])
-                        guesses = [('Mot', '°C', '🌡️', '‰')] + guesses
+                        guesses = [('Word', '°C', '🌡️', '‰')] + guesses
                         fmt = ''
                         for i in range(len(guesses[0])):
                             ml = max(len(g[i]) for g in guesses)
@@ -32,9 +32,9 @@ def cemantix_callback(command, ack: Ack, respond: Respond, say: Say, logger: Log
                         response = '```' + '\n'.join(fmt.format(*g) for g in guesses) + '```'
                         respond(response)
                     else:
-                        respond(f"Cannot get hints, no solutions under {permile}‰ have been found yet.")
+                        respond(f"Cannot get {CemantixSession.game_name} hints, no solutions under {permile}‰ have been found yet.")
                 else:
-                    respond("Cannot get hints, no solutions have been found yet.")
+                    respond(f"Cannot get {CemantixSession.game_name} hints, no solutions have been found yet.")
             except ValueError:
                 respond("Invalid format, expected a number between 0 and 1000.")
         else:
@@ -46,7 +46,7 @@ def cemantix_callback(command, ack: Ack, respond: Respond, say: Say, logger: Log
                 say(text=f"<@{command['user_name']}> started {cemantix_url} with token {session.token}.",
                     channel='games', unfurl_links=False, unfurl_media=False)
             elif session.solution_found:
-                respond(f"Today's solution was already found, use /cemantix_url [0-1000] to get hints about the solution.")
+                respond(f"Today's solution was already found, use /cemantix [0-1000] to get hints about the solution.")
             elif session.has_guesses:
                 word, temp, emoji, permile = session.best_guess
                 respond(f"A {cemantix_url} session is already running, join with token {session.token}, current best guess is {temp}°C {emoji} ({permile}‰).")
@@ -76,14 +76,18 @@ def cemantle_callback(command, ack: Ack, respond: Respond, say: Say, logger: Log
                 elif session.guesses:
                     guesses = list(filter(lambda guess: guess[-1] <= permile, session.guesses))
                     if guesses:
-                        response = ""
-                        for guess in guesses[:min(len(guesses), 10)]:
-                            response += "\n" + " ".join(map(str, guess))
+                        guesses = list(tuple(map(str, g)) for g in guesses[:min(len(guesses), 10)])
+                        guesses = [('Word', '°C', '🌡️', '‰')] + guesses
+                        fmt = ''
+                        for i in range(len(guesses[0])):
+                            ml = max(len(g[i]) for g in guesses)
+                            fmt += '  {:' + f'<{ml}s' + '}'
+                        response = '```' + '\n'.join(fmt.format(*g) for g in guesses) + '```'
                         respond(response)
                     else:
-                        respond(f"Cannot get hints, no solutions under {permile}‰ have been found yet.")
+                        respond(f"Cannot get hints, no {CemantleSession.game_name} solutions under {permile}‰ have been found yet.")
                 else:
-                    respond("Cannot get hints, no solutions have been found yet.")
+                    respond(f"Cannot get hints, no {CemantleSession.game_name} solutions have been found yet.")
             except ValueError:
                 respond("Invalid format, expected a number between 0 and 1000.")
         else:
@@ -92,9 +96,10 @@ def cemantle_callback(command, ack: Ack, respond: Respond, say: Say, logger: Log
                 session = CemantleSession()
                 session.start()
                 cemantle_callback.session = session
-                say(channel='games', text=f"<@{command['user_name']}> started {cemantle_url} with token {session.token}.")
+                say(text=f"<@{command['user_name']}> started {cemantle_url} with token {session.token}.",
+                    channel='games', unfurl_links=False, unfurl_media=False)
             elif session.solution_found:
-                respond(f"Today's solution was already found, use /cemantle_url [0-1000] to get hints about the solution.")
+                respond(f"Today's {CemantleSession.game_name} solution was already found, use /cemantle [0-1000] to get hints about the solution.")
             elif session.has_guesses:
                 word, temp, emoji, permile = session.best_guess
                 respond(f"A {cemantle_url} session is already running, join with token {session.token}, current best guess is {temp}°C {emoji} ({permile}‰).")

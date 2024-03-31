@@ -1,5 +1,6 @@
-import logging
 import os
+import logging
+
 from slack_bolt import App, BoltResponse
 from slack_bolt.oauth.callback_options import CallbackOptions, SuccessArgs, FailureArgs
 from slack_bolt.oauth.oauth_settings import OAuthSettings
@@ -12,20 +13,14 @@ from listeners import register_listeners
 logging.basicConfig(level=logging.DEBUG)
 
 
-# Callback to run on successful installation
 def success(args: SuccessArgs) -> BoltResponse:
-    # Call default handler to return an HTTP response
     return args.default.success(args)
-    # return BoltResponse(status=200, body="Installation successful!")
 
 
-# Callback to run on failed installation
 def failure(args: FailureArgs) -> BoltResponse:
     return args.default.failure(args)
-    # return BoltResponse(status=args.suggested_status_code, body=args.reason)
 
 
-# Initialization
 app = App(
     signing_secret=os.environ.get("SLACK_SIGNING_SECRET"),
     installation_store=FileInstallationStore(),
@@ -42,9 +37,8 @@ app = App(
     ),
 )
 
-# Register Listeners
 register_listeners(app)
 
-# Start Bolt app
+
 if __name__ == "__main__":
     app.start(3000)

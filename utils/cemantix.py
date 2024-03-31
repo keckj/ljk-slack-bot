@@ -34,7 +34,7 @@ class CemantixSession(Thread):
 
     @property
     def has_guesses(self):
-        return self.guesses and self.guesses[0] 
+        return self.guesses and self.guesses[0]
 
     @property
     def best_guess(self):
@@ -51,20 +51,20 @@ class CemantixSession(Thread):
     @property
     def game_is_over(self):
         return self.solution_found or self.time_is_over
-    
+
     @classmethod
     def now(cls):
         return datetime.now(cls.timezone)
-    
+
     @classmethod
     def determine_game_end_time(cls):
         tomorrow = cls.now().date() + timedelta(days=1)
         midnight = cls.timezone.localize(datetime(tomorrow.year, tomorrow.month, tomorrow.day, 0, 0, 0))
-        return midnight 
+        return midnight
 
     def remaining_time(self):
         return self.game_end_time - self.now()
-    
+
     def remaining_time_str(self):
         remaining_time = self.remaining_time()
         hours, remainder = divmod(remaining_time.seconds, 3600)
@@ -75,7 +75,7 @@ class CemantixSession(Thread):
         self.driver = driver = webdriver.Firefox()
 
         driver.get(self.game_url)
-        
+
         time.sleep(self.delay)
         try:
             if btn := driver.find_element(By.CSS_SELECTOR, ".fc-button.fc-cta-do-not-consent.fc-secondary-button"):
@@ -97,9 +97,9 @@ class CemantixSession(Thread):
 
         time.sleep(self.delay)
         driver.find_element(By.ID, 'dialog-close').click()
-        
+
         self.running = True
-        
+
         return self
 
     def close(self):
@@ -123,7 +123,7 @@ class CemantixSession(Thread):
             self.lock.acquire()
             if self.driver is None:
                 return
-            
+
             # click on reveal solution if solution was found
             try:
                 if btn := self.driver.find_element(By.ID, f'{self.game_name}-reveal'):
@@ -134,7 +134,7 @@ class CemantixSession(Thread):
                     time.sleep(self.delay)
             except WebDriverException:
                 pass
-                
+
             # show all close words is solution was found
             try:
                 if btn := self.driver.find_element(By.ID, f'{self.game_name}-see'):
@@ -142,7 +142,7 @@ class CemantixSession(Thread):
                     time.sleep(self.delay)
             except WebDriverException:
                 pass
-            
+
             # extract current guesses
             cur_state = self.driver.find_element_by_id(f'{self.game_name}-guessable').get_attribute('outerHTML')
             if cur_state != prev_state:
@@ -152,9 +152,9 @@ class CemantixSession(Thread):
                 prev_state = cur_state
 
             self.lock.release()
-        
+
         return self.close()
-    
+
     @classmethod
     def _extract_guess(cls, soup):
         word = soup.find('td', {'class': 'word'})
@@ -173,7 +173,7 @@ class CemantixSession(Thread):
         emoji = soup.find('td', {'class': 'emoji'}).get_text(strip=True)
 
         return (word, temperature, emoji, percent)
-    
+
     @classmethod
     def _extract_guesses(cls, soup, game_name):
         table = soup.find('table', {'id': f'{game_name}-guessable'})
@@ -195,5 +195,8 @@ class CemantleSession(CemantixSession):
 
 
 if __name__ == '__main__':
+    session = CemantixSession()
+    session.start()
+
     session = CemantleSession()
     session.start()

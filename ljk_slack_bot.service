@@ -1,0 +1,8 @@
+[Unit]
+Description=LJK Slack Bot
+
+[Service]
+ExecStart=/usr/local/bin/run_ljk_slack_bot.sh
+
+[Install]
+WantedBy=multi-user.target

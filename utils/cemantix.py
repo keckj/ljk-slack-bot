@@ -8,6 +8,7 @@ from bs4 import BeautifulSoup
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.firefox.service import Service
 from selenium.common.exceptions import WebDriverException, NoSuchElementException
 
 class CemantixSession(Thread):
@@ -72,7 +73,12 @@ class CemantixSession(Thread):
         return f"{hours}h {minutes}min {seconds}s"
 
     def create_session(self):
-        self.driver = driver = webdriver.Firefox()
+        service = Service(executable_path='/usr/local/bin/geckodriver', log_output='/home/keckj/ljk-slack-bot/geckodriver.log')
+         
+        options = webdriver.FirefoxOptions()
+        options.add_argument('-headless')
+
+        self.driver = driver = webdriver.Firefox(options=options, service=service)
 
         driver.get(self.game_url)
 

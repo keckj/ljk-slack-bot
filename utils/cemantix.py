@@ -73,10 +73,14 @@ class CemantixSession(Thread):
         return f"{hours}h {minutes}min {seconds}s"
 
     def create_session(self):
-        service = Service(executable_path='/usr/local/bin/geckodriver', log_output='/home/keckj/ljk-slack-bot/geckodriver.log')
+        service = Service(executable_path='/usr/local/bin/geckodriver', log_output='/home/freebox/ljk-slack-bot/geckodriver.log')
          
         options = webdriver.FirefoxOptions()
         options.add_argument('-headless')
+        options.add_argument('--disable-gpu')
+        options.add_argument('--disable-extensions')
+        options.add_argument('--disable-dev-shm-usage')
+        options.add_argument('--no-sandbox')
 
         self.driver = driver = webdriver.Firefox(options=options, service=service)
 

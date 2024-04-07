@@ -1,3 +1,4 @@
+import os
 import time
 from datetime import datetime, timedelta
 from threading import Thread, Lock
@@ -10,6 +11,16 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.service import Service
 from selenium.common.exceptions import WebDriverException, NoSuchElementException
+
+
+script_dir = os.path.dirname(os.path.abspath(__file__))
+log_file = os.path.join(script_dir, '..', 'geckodriver.log')
+
+
+driver_path = '/usr/local/bin/geckodriver'
+assert os.path.isfile(driver_path), driver_path
+assert os.access(driver_path, os.X_OK), driver_path
+
 
 class CemantixSession(Thread):
     timezone = pytz.timezone('Europe/Paris')
@@ -73,8 +84,8 @@ class CemantixSession(Thread):
         return f"{hours}h {minutes}min {seconds}s"
 
     def create_session(self):
-        service = Service(executable_path='/usr/local/bin/geckodriver', log_output='/home/freebox/ljk-slack-bot/geckodriver.log')
-         
+        service = Service(executable_path=driver_path, log_output=log_file)
+
         options = webdriver.FirefoxOptions()
         options.add_argument('-headless')
         options.add_argument('--disable-gpu')
@@ -121,7 +132,7 @@ class CemantixSession(Thread):
         return self
 
     def run(self):
-        prev_state = self.driver.find_element_by_id(f'{self.game_name}-guessable').get_attribute('outerHTML')
+        prev_state = self.driver.find_element(By.ID, f'{self.game_name}-guessable').get_attribute('outerHTML')
 
         while not self.game_is_over:
             # make the thread sleep 10s
@@ -154,7 +165,7 @@ class CemantixSession(Thread):
                 pass
 
             # extract current guesses
-            cur_state = self.driver.find_element_by_id(f'{self.game_name}-guessable').get_attribute('outerHTML')
+            cur_state = self.driver.find_element(By.ID, f'{self.game_name}-guessable').get_attribute('outerHTML')
             if cur_state != prev_state:
                 soup = BeautifulSoup(cur_state, 'html.parser')
                 guesses = self._extract_guesses(soup, self.game_name)
